@@ -99,10 +99,14 @@ class Validator:
         return response_hook
 
     def validate(self) -> None:
-        code_blocks = len([None for link in self._links if "code" in link.keys()])
-        print(f'Found {len(self._links)} links, {code_blocks}'
-              f' associated with code block\n\nFetching...\n\n\n')
+        links_count = len(self._links)
+        code_blocks_count = len([None for link in self._links if "code" in link.keys()])
+        print(f'Found {links_count} links, {code_blocks_count} associated with code block\n\n')
 
+        if not links_count:
+            exit()
+
+        print('Fetching...\n\n\n')
         with FuturesSession(max_workers=24) as session:
             futures = [(session.get(link['url'], hooks={
                 'response': self._validate_link(link)
@@ -117,9 +121,9 @@ class Validator:
                         self._code_mismatch = True
                     print(f'{file}: ERROR FETCHING THE FOLLOWING LINK ---> {url}')
 
-        if not self._errors:
+        if not self._errors and links_count:
             print('Every link returned 200 (:')
-        if not self._code_mismatch and code_blocks:
+        if not self._code_mismatch and code_blocks_count:
             print('Every code block is up-to-date (:')
 
 
