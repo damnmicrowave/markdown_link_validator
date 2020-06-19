@@ -49,7 +49,8 @@ class Validator:
 
     def parse_links(self) -> None:
         link_regex = re.compile(
-            r'\[[^\[\]]+\]\((http[s]?://(?:[a-zA-Z]|[0-9]|[#-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)\)'
+            r'!?\[(?:\[[^\[\]]*\]|\\[\[\]]?|`[^`]*`|[^\[\]\\])*?\]'
+            r'\((http[s]?://(?:[a-zA-Z]|[0-9]|[#-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)\)'
         )
         code_link_regex = re.compile(
             r'\[_metadata_:link\]:'
@@ -98,7 +99,8 @@ class Validator:
         return response_hook
 
     def validate(self) -> None:
-        print(f'Found {len(self._links)} links, {len([None for link in self._links if "code" in link.keys()])}'
+        code_blocks = len([None for link in self._links if "code" in link.keys()])
+        print(f'Found {len(self._links)} links, {code_blocks}'
               f' associated with code block\n\nFetching...\n\n\n')
 
         with FuturesSession(max_workers=24) as session:
@@ -117,7 +119,7 @@ class Validator:
 
         if not self._errors:
             print('Every link returned 200 (:')
-        if not self._code_mismatch:
+        if not self._code_mismatch and code_blocks:
             print('Every code block is up-to-date (:')
 
 
